@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: bookease
+      POSTGRES_USER: bookease
+      POSTGRES_PASSWORD: bookease123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: bookease
+      RABBITMQ_DEFAULT_PASS: bookease123
+
+volumes:
+  postgres_data:
