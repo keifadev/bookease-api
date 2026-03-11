@@ -11,6 +11,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -20,8 +21,8 @@ import java.time.LocalDateTime;
 @Setter
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false)
     private String name;
