@@ -1,4 +1,4 @@
-package com.keifa.bookease.config;
+package com.keifa.bookease.common.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
