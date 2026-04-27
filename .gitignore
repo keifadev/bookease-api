@@ -1,5 +1,6 @@
 HELP.md
 PROJECT_PLAN.md
+GIT_WORKFLOW.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
