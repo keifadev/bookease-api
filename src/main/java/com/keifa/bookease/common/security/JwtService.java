@@ -12,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -26,13 +27,33 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public UUID extractProfileId(String token) {
+        String profileId = extractClaim(token, claims -> claims.get("profileId", String.class));
+        return profileId != null ? UUID.fromString(profileId) : null;
+    }
+
+    public UUID extractUserId(String token) {
+        String userId = extractClaim(token, claims -> claims.get("userId", String.class));
+        return userId != null ? UUID.fromString(userId) : null;
+    }
+
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        Map<String, Object> extraClaims = new HashMap<>();
+
+        if (userDetails instanceof UserDetailsImpl details && details.isProfessional()) {
+            extraClaims.put("profileId", details.getProfileId().toString());
+        }
+
+        if (userDetails instanceof UserDetailsImpl details) {
+            extraClaims.put("userId", details.getUserId().toString());
+        }
+
+        return generateToken(extraClaims, userDetails);
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
