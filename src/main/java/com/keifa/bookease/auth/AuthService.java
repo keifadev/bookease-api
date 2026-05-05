@@ -1,14 +1,13 @@
 package com.keifa.bookease.auth;
 
-import com.keifa.bookease.auth.dto.LoginRequestDto;
-import com.keifa.bookease.auth.dto.RegisterRequestDTO;
-import com.keifa.bookease.auth.dto.TokenResponseDto;
+import com.keifa.bookease.auth.dto.LoginRequest;
+import com.keifa.bookease.auth.dto.RegisterRequest;
+import com.keifa.bookease.auth.dto.TokenResponse;
 import com.keifa.bookease.common.security.JwtService;
 import com.keifa.bookease.common.security.UserDetailsImpl;
 import com.keifa.bookease.user.User;
 import com.keifa.bookease.user.UserRepository;
 import com.keifa.bookease.user.exception.InvalidPasswordException;
-import com.keifa.bookease.user.exception.PasswordMismatchException;
 import com.keifa.bookease.user.exception.UserNotFoundException;
 import com.keifa.bookease.user.mapper.UserMapper;
 import jakarta.transaction.Transactional;
@@ -30,10 +29,10 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenResponseDto register(RegisterRequestDTO dto) {
-        User user = mapper.toUser(dto);
+    public TokenResponse register(RegisterRequest request) {
+        User user = mapper.toUser(request);
 
-        user.setPassword(encoder.encode(dto.password()));
+        user.setPassword(encoder.encode(request.password()));
 
         User saved = repository.save(user);
 
@@ -41,15 +40,15 @@ public class AuthService {
 
         String token = jwtService.generateToken(details);
 
-        return new TokenResponseDto(token);
+        return new TokenResponse(token);
     }
 
     @Transactional
-    public TokenResponseDto login(LoginRequestDto dto) {
-        User user = repository.findByEmail(dto.email())
+    public TokenResponse login(LoginRequest request) {
+        User user = repository.findByEmail(request.email())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (!encoder.matches(dto.password(), user.getPassword())) {
+        if (!encoder.matches(request.password(), user.getPassword())) {
             throw new InvalidPasswordException("Password is incorrect");
         }
 
@@ -57,7 +56,7 @@ public class AuthService {
 
         String token = jwtService.generateToken(details);
 
-        return new TokenResponseDto(token);
+        return new TokenResponse(token);
     }
 
     private static UserDetailsImpl toUserDetails(User user) {

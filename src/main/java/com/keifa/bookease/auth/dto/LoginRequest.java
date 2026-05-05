@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record LoginRequestDto(
+public record LoginRequest(
         @NotBlank(message = "O e-mail é obrigatório.")
         @Email(message = "O e-mail informado é inválido.")
         String email,

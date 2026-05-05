@@ -1,6 +1,6 @@
 package com.keifa.bookease.auth.dto;
 
-public record TokenResponseDto(
+public record TokenResponse(
         String token
 ) {
 }
