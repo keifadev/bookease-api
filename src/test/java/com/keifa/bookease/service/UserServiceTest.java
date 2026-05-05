@@ -4,12 +4,11 @@ import com.keifa.bookease.enums.Role;
 import com.keifa.bookease.user.User;
 import com.keifa.bookease.user.UserRepository;
 import com.keifa.bookease.user.UserService;
-import com.keifa.bookease.user.dto.request.UserUpdatePasswordRequestDto;
-import com.keifa.bookease.user.dto.request.UserUpdateRequestDto;
-import com.keifa.bookease.user.dto.response.AdminUserViewDTO;
-import com.keifa.bookease.user.dto.response.CurrentUserResponseDto;
-import com.keifa.bookease.user.dto.response.UserPublicResponseDto;
-import com.keifa.bookease.user.dto.response.UserUpdateResponseDto;
+import com.keifa.bookease.user.dto.request.UserUpdatePasswordRequest;
+import com.keifa.bookease.user.dto.request.UserUpdateRequest;
+import com.keifa.bookease.user.dto.response.AdminUserViewResponse;
+import com.keifa.bookease.user.dto.response.CurrentUserResponse;
+import com.keifa.bookease.user.dto.response.UserPublicResponse;
 import com.keifa.bookease.user.exception.*;
 import com.keifa.bookease.user.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,37 +59,27 @@ class UserServiceTest {
     @Test
     @DisplayName("Should update user successfully when everything is OK")
     void updateUser_success() {
-        UserUpdateRequestDto request = new UserUpdateRequestDto("Richard Feynman",
+        UserUpdateRequest request = new UserUpdateRequest("Richard Feynman",
                 "feynman@proton.me", "(31) 97245-2995");
-
-        UserUpdateResponseDto responseDto = new UserUpdateResponseDto(
-                request.name(),
-                request.email(),
-                request.phone()
-        );
 
         when(repository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
         when(repository.existsByEmail(request.email())).thenReturn(false);
         when(repository.save(user)).thenReturn(user);
-        when(mapper.toResponseDto(user)).thenReturn(responseDto);
 
         doNothing().when(mapper).updateUserFromDto(request, user);
 
-        UserUpdateResponseDto result = service.updateUser(user.getEmail(), request);
+        service.updateUser(user.getEmail(), request);
 
         verify(repository).findByEmail(user.getEmail());
         verify(repository).existsByEmail(request.email());
         verify(mapper).updateUserFromDto(request, user);
         verify(repository).save(user);
-        verify(mapper).toResponseDto(user);
-
-        assertThat(result).isEqualTo(responseDto);
     }
 
     @Test
     @DisplayName("Should throw UserNotFoundException when user does not exist")
     void updateUser_userNotFound() {
-        UserUpdateRequestDto request = new UserUpdateRequestDto("Richard Feynman",
+        UserUpdateRequest request = new UserUpdateRequest("Richard Feynman",
                 "feynman@proton.me", "(31) 97245-2995");
 
         String email = request.email();
@@ -105,13 +94,12 @@ class UserServiceTest {
         verify(repository, never()).existsByEmail(any());
         verify(repository, never()).save(any());
         verify(mapper, never()).updateUserFromDto(any(), any());
-        verify(mapper, never()).toResponseDto(any());
     }
 
     @Test
     @DisplayName("Should throw EmailAlreadyExistsException when email is already in use")
     void updateUser_emailAlreadyExists() {
-        UserUpdateRequestDto request = new UserUpdateRequestDto("Richard Feynman",
+        UserUpdateRequest request = new UserUpdateRequest("Richard Feynman",
                 "feynman@proton.me", "(31) 97245-2995");
 
         when(repository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
@@ -127,41 +115,31 @@ class UserServiceTest {
         verify(repository).existsByEmail(request.email());
         verify(repository, never()).save(any());
         verify(mapper, never()).updateUserFromDto(any(), any());
-        verify(mapper, never()).toResponseDto(any());
     }
 
     @Test
     @DisplayName("Should update user when email is null")
     void updateUser_emailIsNull_shouldUpdateUser() {
-        UserUpdateRequestDto request = new UserUpdateRequestDto("Richard Feynman",
+        UserUpdateRequest request = new UserUpdateRequest("Richard Feynman",
                 null, "(31) 97245-2995");
-
-        UserUpdateResponseDto responseDto = new UserUpdateResponseDto(
-                user.getName(),
-                user.getEmail(),
-                user.getPhone()
-        );
 
         String email = user.getEmail();
 
         when(repository.findByEmail(email)).thenReturn(Optional.of(user));
         when(repository.save(user)).thenReturn(user);
-        when(mapper.toResponseDto(user)).thenReturn(responseDto);
 
         doNothing().when(mapper).updateUserFromDto(request, user);
 
-        UserUpdateResponseDto result = service.updateUser(email, request);
+        service.updateUser(email, request);
 
         verify(repository, times(1)).findByEmail(email);
         verify(repository).save(user);
-        verify(mapper).toResponseDto(user);
-        assertThat(result).isEqualTo(responseDto);
     }
 
     @Test
     @DisplayName("Should update password successfully when everything is OK")
     void updatePassword_success() {
-        UserUpdatePasswordRequestDto request = new UserUpdatePasswordRequestDto(
+        UserUpdatePasswordRequest request = new UserUpdatePasswordRequest(
                 user.getPassword(), "ImNotElliot1@!", "ImNotElliot1@!"
         );
 
@@ -183,7 +161,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Should throw InvalidPasswordException when password is incorrect")
     void updatePassword_InvalidPassword() {
-        UserUpdatePasswordRequestDto request = new UserUpdatePasswordRequestDto("ThraggTheRealEmperor1@#",
+        UserUpdatePasswordRequest request = new UserUpdatePasswordRequest("ThraggTheRealEmperor1@#",
                 "MrRobot3@silence", "MrRobot3@silence");
 
         when(repository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
@@ -201,7 +179,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Should throw InvalidPasswordException when new password is the same as the old password")
     void updatePassword_InvalidPasswordOldPassword() {
-        UserUpdatePasswordRequestDto request = new UserUpdatePasswordRequestDto("Feynman123@!",
+        UserUpdatePasswordRequest request = new UserUpdatePasswordRequest("Feynman123@!",
                 "Feynman123@!", "Feynman123@!");
 
         when(repository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
@@ -219,7 +197,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Should throw PasswordMismatchException when new password and confirm password do not match")
     void updatePassword_MismatchPassword() {
-        UserUpdatePasswordRequestDto request = new UserUpdatePasswordRequestDto("Feynman123@!",
+        UserUpdatePasswordRequest request = new UserUpdatePasswordRequest("Feynman123@!",
                 "Oppenheimer123@!", "Oppenheimer123@");
 
         when(repository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
@@ -328,13 +306,13 @@ class UserServiceTest {
     @Test
     @DisplayName("Should return current user when everything is OK")
     void getCurrentUser_success() {
-        CurrentUserResponseDto responseDto = new CurrentUserResponseDto(user.getId(), user.getName(), user.getEmail(),
+        CurrentUserResponse responseDto = new CurrentUserResponse(user.getId(), user.getName(), user.getEmail(),
                 user.getPhone(), user.getRole(), java.time.LocalDateTime.now());
 
         when(repository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(mapper.toCurrentUserResponseDto(user)).thenReturn(responseDto);
+        when(mapper.toCurrentUserResponse(user)).thenReturn(responseDto);
 
-        CurrentUserResponseDto result = service.getCurrentUser(user.getEmail());
+        CurrentUserResponse result = service.getCurrentUser(user.getEmail());
 
         assertThat(result).isEqualTo(responseDto);
         verify(repository).findByEmail(user.getEmail());
@@ -343,12 +321,12 @@ class UserServiceTest {
     @Test
     @DisplayName("Should return user public info when everything is OK")
     void getUserPublicInfo_success() {
-        UserPublicResponseDto responseDto = new UserPublicResponseDto(user.getId(), user.getName(), user.getRole());
+        UserPublicResponse responseDto = new UserPublicResponse(user.getId(), user.getName(), user.getRole());
 
         when(repository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(mapper.toPublicDto(user)).thenReturn(responseDto);
+        when(mapper.toPublicResponse(user)).thenReturn(responseDto);
 
-        UserPublicResponseDto result = service.getUserPublicInfo(user.getId());
+        UserPublicResponse result = service.getUserPublicInfo(user.getId());
 
         assertThat(result).isEqualTo(responseDto);
         verify(repository).findById(user.getId());
@@ -359,12 +337,12 @@ class UserServiceTest {
     void getAllUsers_success() {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
         org.springframework.data.domain.Page<User> page = new org.springframework.data.domain.PageImpl<>(java.util.List.of(user));
-        AdminUserViewDTO adminViewDto = new AdminUserViewDTO(user.getId(), user.getName(), user.getEmail(), user.getPhone(), user.getRole(), user.isActive());
+        AdminUserViewResponse adminViewDto = new AdminUserViewResponse(user.getId(), user.getName(), user.getEmail(), user.getPhone(), user.getRole(), user.isActive());
 
         when(repository.findAll(pageable)).thenReturn(page);
-        when(mapper.toAdminUserViewDto(user)).thenReturn(adminViewDto);
+        when(mapper.toAdminUserView(user)).thenReturn(adminViewDto);
 
-        org.springframework.data.domain.Page<AdminUserViewDTO> result = service.getAllUsers(pageable);
+        org.springframework.data.domain.Page<AdminUserViewResponse> result = service.getAllUsers(pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(adminViewDto);
@@ -374,7 +352,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Should throw UserNotFoundException when user not found during password update")
     void updatePassword_UserNotFound() {
-        UserUpdatePasswordRequestDto request = new UserUpdatePasswordRequestDto("old", "new", "new");
+        UserUpdatePasswordRequest request = new UserUpdatePasswordRequest("old", "new", "new");
         String email = "notfound@gmail.com";
         when(repository.findByEmail(email)).thenReturn(Optional.empty());
 

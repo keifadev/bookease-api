@@ -6,11 +6,10 @@ import com.keifa.bookease.enums.Role;
 import com.keifa.bookease.user.User;
 import com.keifa.bookease.user.UserController;
 import com.keifa.bookease.user.UserService;
-import com.keifa.bookease.user.dto.request.UserUpdatePasswordRequestDto;
-import com.keifa.bookease.user.dto.request.UserUpdateRequestDto;
-import com.keifa.bookease.user.dto.response.CurrentUserResponseDto;
-import com.keifa.bookease.user.dto.response.UserPublicResponseDto;
-import com.keifa.bookease.user.dto.response.UserUpdateResponseDto;
+import com.keifa.bookease.user.dto.request.UserUpdatePasswordRequest;
+import com.keifa.bookease.user.dto.request.UserUpdateRequest;
+import com.keifa.bookease.user.dto.response.CurrentUserResponse;
+import com.keifa.bookease.user.dto.response.UserPublicResponse;
 import com.keifa.bookease.user.exception.UserNotFoundException;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -76,7 +75,7 @@ class UserControllerTest {
             public @Nullable Object resolveArgument(@NonNull MethodParameter parameter,
                                                     @Nullable ModelAndViewContainer mavContainer,
                                                     @NonNull NativeWebRequest webRequest,
-                                                    @Nullable WebDataBinderFactory binderFactory) throws Exception {
+                                                    @Nullable WebDataBinderFactory binderFactory) {
                 return userDetails;
             }
         };
@@ -105,7 +104,7 @@ class UserControllerTest {
         @Test
         @DisplayName("Should return current user when authenticated")
         void should_ReturnCurrentUser_When_Authenticated() throws Exception {
-            CurrentUserResponseDto response = new CurrentUserResponseDto(UUID.randomUUID(), "Keifa", "keifa@dev",
+            CurrentUserResponse response = new CurrentUserResponse(UUID.randomUUID(), "Keifa", "keifa@dev",
                     "(31) 97245-2995", Role.CLIENT, LocalDateTime.now());
 
             when(userDetails.getUsername()).thenReturn("keifa@dev");
@@ -135,27 +134,16 @@ class UserControllerTest {
         @Test
         @DisplayName("Should update user when request is valid")
         void should_UpdateUser_When_RequestIsValid() throws Exception {
-            UserUpdateRequestDto request = new UserUpdateRequestDto("Keifa", "keifa@diva",
+            UserUpdateRequest request = new UserUpdateRequest("Keifa", "keifa@diva",
                     "(31) 97245-2995");
 
-            UserUpdateResponseDto response = new UserUpdateResponseDto(request.name(),
-                    request.email(),
-                    request.phone());
-
             when(userDetails.getUsername()).thenReturn("keifa@diva");
-
-            String username = userDetails.getUsername();
-
-            when(service.updateUser(username, request)).thenReturn(response);
 
             mvc.perform(patch("/api/v1/users/me")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.name").value("Keifa"))
-                    .andExpect(jsonPath("$.email").value("keifa@diva"));
+                    .andExpect(status().isNoContent());
         }
-
     }
 
     @Nested
@@ -164,7 +152,7 @@ class UserControllerTest {
         @Test
         @DisplayName("Should update password when request is valid")
         void should_UpdatePassword_When_RequestIsValid() throws Exception {
-            UserUpdatePasswordRequestDto request = new UserUpdatePasswordRequestDto("oldPassword", "newPassword123@", "newPassword123@");
+            UserUpdatePasswordRequest request = new UserUpdatePasswordRequest("oldPassword", "newPassword123@", "newPassword123@");
 
             when(userDetails.getUsername()).thenReturn("keifa@dev");
 
@@ -173,7 +161,7 @@ class UserControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent());
 
-            verify(service).updatePassword(eq("keifa@dev"), any(UserUpdatePasswordRequestDto.class));
+            verify(service).updatePassword(eq("keifa@dev"), any(UserUpdatePasswordRequest.class));
         }
     }
 
@@ -184,7 +172,7 @@ class UserControllerTest {
         @DisplayName("Should return public info when user exists")
         void should_ReturnPublicInfo_When_UserExists() throws Exception {
             UUID id = UUID.randomUUID();
-            UserPublicResponseDto response = new UserPublicResponseDto(id, "Keifa", Role.CLIENT);
+            UserPublicResponse response = new UserPublicResponse(id, "Keifa", Role.CLIENT);
 
             when(service.getUserPublicInfo(id)).thenReturn(response);
 
