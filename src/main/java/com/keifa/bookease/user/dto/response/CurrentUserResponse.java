@@ -5,7 +5,7 @@ import com.keifa.bookease.enums.Role;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record CurrentUserResponseDto(
+public record CurrentUserResponse(
         UUID id,
         String name,
         String email,

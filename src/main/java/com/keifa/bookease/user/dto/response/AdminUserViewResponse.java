@@ -4,7 +4,7 @@ import com.keifa.bookease.enums.Role;
 
 import java.util.UUID;
 
-public record AdminUserViewDTO(
+public record AdminUserViewResponse(
         UUID userId,
         String name,
         String email,
