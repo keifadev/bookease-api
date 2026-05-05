@@ -1,11 +1,10 @@
 package com.keifa.bookease.user;
 
-import com.keifa.bookease.user.dto.request.UserUpdatePasswordRequestDto;
-import com.keifa.bookease.user.dto.request.UserUpdateRequestDto;
-import com.keifa.bookease.user.dto.response.AdminUserViewDTO;
-import com.keifa.bookease.user.dto.response.CurrentUserResponseDto;
-import com.keifa.bookease.user.dto.response.UserPublicResponseDto;
-import com.keifa.bookease.user.dto.response.UserUpdateResponseDto;
+import com.keifa.bookease.user.dto.request.UserUpdatePasswordRequest;
+import com.keifa.bookease.user.dto.request.UserUpdateRequest;
+import com.keifa.bookease.user.dto.response.AdminUserViewResponse;
+import com.keifa.bookease.user.dto.response.CurrentUserResponse;
+import com.keifa.bookease.user.dto.response.UserPublicResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,45 +27,46 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<CurrentUserResponseDto> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<CurrentUserResponse> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
 
-        CurrentUserResponseDto currentUser = service.getCurrentUser(username);
+        CurrentUserResponse currentUser = service.getCurrentUser(username);
 
         return ResponseEntity.ok(currentUser);
     }
 
     @PatchMapping("/me")
-    public ResponseEntity<UserUpdateResponseDto> updateUser(@Valid @RequestBody UserUpdateRequestDto dto,
-                                                            @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Void> updateUser(@Valid @RequestBody UserUpdateRequest request,
+                                           @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
 
-        UserUpdateResponseDto updated = service.updateUser(username, dto);
+        service.updateUser(username, request);
 
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/me/password")
-    public ResponseEntity<Void> updateUserPassword(@Valid @RequestBody UserUpdatePasswordRequestDto dto,
+    public ResponseEntity<Void> updateUserPassword(@Valid @RequestBody UserUpdatePasswordRequest request,
                                                    @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
 
-        service.updatePassword(username, dto);
+        service.updatePassword(username, request);
 
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserPublicResponseDto> getPublicInfo(@PathVariable UUID id) {
-        UserPublicResponseDto userPublicInfo = service.getUserPublicInfo(id);
+    public ResponseEntity<UserPublicResponse> getPublicInfo(@PathVariable UUID id) {
+
+        UserPublicResponse userPublicInfo = service.getUserPublicInfo(id);
 
         return ResponseEntity.ok(userPublicInfo);
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<AdminUserViewDTO>> getAllUsers(Pageable pageable) {
-        Page<AdminUserViewDTO> allUsers = service.getAllUsers(pageable);
+    public ResponseEntity<Page<AdminUserViewResponse>> getAllUsers(Pageable pageable) {
+        Page<AdminUserViewResponse> allUsers = service.getAllUsers(pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(allUsers);
     }

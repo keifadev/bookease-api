@@ -1,14 +1,14 @@
 package com.keifa.bookease.user;
 
-import com.keifa.bookease.user.dto.request.UserUpdatePasswordRequestDto;
-import com.keifa.bookease.user.dto.request.UserUpdateRequestDto;
-import com.keifa.bookease.user.dto.response.AdminUserViewDTO;
-import com.keifa.bookease.user.dto.response.CurrentUserResponseDto;
-import com.keifa.bookease.user.dto.response.UserPublicResponseDto;
-import com.keifa.bookease.user.dto.response.UserUpdateResponseDto;
+import com.keifa.bookease.user.dto.request.UserUpdatePasswordRequest;
+import com.keifa.bookease.user.dto.request.UserUpdateRequest;
+import com.keifa.bookease.user.dto.response.AdminUserViewResponse;
+import com.keifa.bookease.user.dto.response.CurrentUserResponse;
+import com.keifa.bookease.user.dto.response.UserPublicResponse;
 import com.keifa.bookease.user.exception.*;
 import com.keifa.bookease.user.mapper.UserMapper;
 import jakarta.transaction.Transactional;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,46 +29,41 @@ public class UserService {
     }
 
     @Transactional
-    public UserUpdateResponseDto updateUser(String email, UserUpdateRequestDto dto) {
-        User user = repository.findByEmail(email).
-                orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+    public void updateUser(String email, UserUpdateRequest request) {
+        User user = getUserByEmail(email);
 
-        if (dto.email() != null && repository.existsByEmail(dto.email()) && !dto.email().equals(user.getEmail())) {
-            throw new EmailAlreadyExistsException("Email already in use " + dto.email());
+        if (request.email() != null && repository.existsByEmail(request.email()) && !request.email().equals(user.getEmail())) {
+            throw new EmailAlreadyExistsException("Email already in use " + request.email());
         }
 
-        mapper.updateUserFromDto(dto, user);
+        mapper.updateUserFromDto(request, user);
 
-        User saved = repository.save(user);
-
-        return mapper.toResponseDto(saved);
+        repository.save(user);
     }
 
     @Transactional
-    public void updatePassword(String email, UserUpdatePasswordRequestDto dto) {
-        User user = repository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+    public void updatePassword(String email, UserUpdatePasswordRequest request) {
+        User user = getUserByEmail(email);
 
-        if (!encoder.matches(dto.password(), user.getPassword())) {
+        if (!encoder.matches(request.password(), user.getPassword())) {
             throw new InvalidPasswordException("Password is incorrect");
         }
 
-        if (encoder.matches(dto.newPassword(), user.getPassword())) {
+        if (encoder.matches(request.newPassword(), user.getPassword())) {
             throw new InvalidPasswordException("New password cannot be the same as the old password");
         }
 
-        if (!dto.newPassword().equals(dto.confirmNewPassword())) {
+        if (!request.newPassword().equals(request.confirmNewPassword())) {
             throw new PasswordMismatchException("New password and confirm new password do not match");
         }
 
-        user.setPassword(encoder.encode(dto.newPassword()));
+        user.setPassword(encoder.encode(request.newPassword()));
 
         repository.save(user);
     }
 
     public void deactivateUser(UUID userId) {
-        User user = repository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
+        User user = getUserById(userId);
 
         if (!user.isActive()) throw new UserAlreadyInactiveException("This user is already inactive");
 
@@ -78,8 +73,7 @@ public class UserService {
     }
 
     public void activateUser(UUID userId) {
-        User user = repository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
+        User user = getUserById(userId);
 
         if (user.isActive()) throw new UserAlreadyActiveException("This user is already active");
 
@@ -88,21 +82,29 @@ public class UserService {
         repository.save(user);
     }
 
-    public CurrentUserResponseDto getCurrentUser(String email) {
-        User user = repository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+    public CurrentUserResponse getCurrentUser(String email) {
+        User user = getUserByEmail(email);
 
-        return mapper.toCurrentUserResponseDto(user);
+        return mapper.toCurrentUserResponse(user);
     }
 
-    public UserPublicResponseDto getUserPublicInfo(UUID userId) {
-        User user = repository.findById(userId)
+    public UserPublicResponse getUserPublicInfo(UUID userId) {
+        User user = getUserById(userId);
+
+        return mapper.toPublicResponse(user);
+    }
+
+    public Page<AdminUserViewResponse> getAllUsers(Pageable pageable) {
+        return repository.findAll(pageable).map(mapper::toAdminUserView);
+    }
+
+    private @NonNull User getUserByEmail(String email) {
+        return repository.findByEmail(email).
+                orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+    }
+    
+    private @NonNull User getUserById(UUID userId) {
+        return repository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
-
-        return mapper.toPublicDto(user);
-    }
-
-    public Page<AdminUserViewDTO> getAllUsers(Pageable pageable) {
-        return repository.findAll(pageable).map(mapper::toAdminUserViewDto);
     }
 }

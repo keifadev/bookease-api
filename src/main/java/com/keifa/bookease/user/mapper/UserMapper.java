@@ -1,12 +1,11 @@
 package com.keifa.bookease.user.mapper;
 
-import com.keifa.bookease.auth.dto.RegisterRequestDTO;
+import com.keifa.bookease.auth.dto.RegisterRequest;
 import com.keifa.bookease.user.User;
-import com.keifa.bookease.user.dto.request.UserUpdateRequestDto;
-import com.keifa.bookease.user.dto.response.AdminUserViewDTO;
-import com.keifa.bookease.user.dto.response.CurrentUserResponseDto;
-import com.keifa.bookease.user.dto.response.UserPublicResponseDto;
-import com.keifa.bookease.user.dto.response.UserUpdateResponseDto;
+import com.keifa.bookease.user.dto.request.UserUpdateRequest;
+import com.keifa.bookease.user.dto.response.AdminUserViewResponse;
+import com.keifa.bookease.user.dto.response.CurrentUserResponse;
+import com.keifa.bookease.user.dto.response.UserPublicResponse;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
@@ -18,7 +17,7 @@ public interface UserMapper {
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateUserFromDto(UserUpdateRequestDto dto, @MappingTarget User user);
+    void updateUserFromDto(UserUpdateRequest request, @MappingTarget User user);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "password", ignore = true)
@@ -26,14 +25,12 @@ public interface UserMapper {
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    User toUser(RegisterRequestDTO dto);
+    User toUser(RegisterRequest request);
 
-    UserUpdateResponseDto toResponseDto(User user);
+    UserPublicResponse toPublicResponse(User user);
 
-    UserPublicResponseDto toPublicDto(User user);
-
-    CurrentUserResponseDto toCurrentUserResponseDto(User user);
+    CurrentUserResponse toCurrentUserResponse(User user);
 
     @Mapping(source = "id", target = "userId")
-    AdminUserViewDTO toAdminUserViewDto(User user);
+    AdminUserViewResponse toAdminUserView(User user);
 }
